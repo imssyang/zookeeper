@@ -1,13 +1,23 @@
 #!/bin/bash
 
 APP=zookeeper
-USER=root
-GROUP=root
+USER=zookeeper
+GROUP=zookeeper
 HOME=/opt/$APP
 SYSD=/etc/systemd/system
 SERFILE=zookeeper.service
 
-initialize() {
+init() {
+  egrep "^$GROUP" /etc/group >/dev/null
+  if [[ $? -ne 0 ]]; then
+    groupadd -r $GROUP
+  fi
+
+  egrep "^$USER" /etc/passwd >/dev/null
+  if [[ $? -ne 0 ]]; then
+    useradd -r -g $GROUP -s /usr/sbin/nologin -M $USER
+  fi
+
   chown -R $GROUP:$USER $HOME
   chmod 755 $HOME
 
@@ -20,7 +30,17 @@ initialize() {
   systemctl daemon-reload
 }
 
-deinitialize() {
+deinit() {
+  egrep "^$USER" /etc/passwd >/dev/null
+  if [[ $? -eq 0 ]]; then
+    userdel $USER
+  fi
+
+  egrep "^$GROUP" /etc/group >/dev/null
+  if [[ $? -eq 0 ]]; then
+    groupdel $GROUP
+  fi
+
   chown -R root:root $HOME
 
   if [[ -s $SYSD/$SERFILE ]]; then
@@ -30,45 +50,45 @@ deinitialize() {
   fi
 }
 
-daemon_start() {
+start() {
   local pid=$(jps -l -m | grep $APP | awk '{print $1}')
   if [[ "x" == "x$pid" ]]; then
     systemctl start $SERFILE
     echo "($APP) $SERFILE start!"
   fi
 
-  daemon_show
+  show
 }
 
-daemon_stop() {
+stop() {
   local pid=$(jps -l -m | grep $APP | awk '{print $1}')
   if [[ "x" != "x$pid" ]]; then
     systemctl stop $SERFILE
     echo "($APP) $SERFILE stop!"
   fi
 
-  daemon_show
+  show
 }
 
-daemon_show() {
+show() {
   jps -l -m | grep $APP
 }
 
 case "$1" in
   init)
-    initialize
+    init
     ;;
   deinit)
-    deinitialize
+    deinit
     ;;
   start)
-    daemon_start
+    start
     ;;
   stop)
-    daemon_stop
+    stop
     ;;
   show)
-	daemon_show
+	show
 	;;
   *)
     SCRIPTNAME="${0##*/}"

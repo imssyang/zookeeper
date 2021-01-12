@@ -1,15 +1,17 @@
 [Unit]
-Description=High-performance coordination service for distributed applications
-After=network.target
-Documentation=https://zookeeper.apache.org/doc/r3.6.2/index.html
+Description=Apache Zookeeper Server
+Documentation=https://zookeeper.apache.org
+Requires=network.target remote-fs.target
+After=network.target remote-fs.target
 
 [Service]
 Type=forking
+User=zookeeper
+Group=zookeeper
 Environment="JAVA_HOME=/opt/java"
 ExecStart=/opt/zookeeper/bin/zkServer.sh --config /opt/zookeeper/conf start
 ExecStop=/opt/zookeeper/bin/zkServer.sh --config /opt/zookeeper/conf stop
-User=root
-Group=root
 
 [Install]
 WantedBy=multi-user.target
+
