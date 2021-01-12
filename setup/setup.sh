@@ -18,6 +18,14 @@ init() {
     useradd -r -g $GROUP -s /usr/sbin/nologin -M $USER
   fi
 
+  if [[ ! -d $HOME/logs ]]; then
+    mkdir $HOME/logs
+  fi
+
+  if [[ ! -d $HOME/data ]]; then
+    mkdir $HOME/data
+  fi
+
   chown -R $GROUP:$USER $HOME
   chmod 755 $HOME
 
@@ -42,6 +50,16 @@ deinit() {
   fi
 
   chown -R root:root $HOME
+
+  if [[ -d $HOME/data ]]; then
+    rm -rf $HOME/data
+    echo "($APP) delete $HOME/data"
+  fi
+
+  if [[ -d $HOME/logs ]]; then
+    rm -rf $HOME/logs
+    echo "($APP) delete $HOME/logs"
+  fi
 
   if [[ -s $SYSD/$SERFILE ]]; then
     systemctl disable $SERFILE
